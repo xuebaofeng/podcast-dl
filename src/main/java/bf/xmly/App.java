@@ -48,44 +48,40 @@ public class App {
     boolean hasNext = false;
     for (Element track : tracks) {
       String href = track.attr("href");
-      System.out.println(href);
       String[] tried = href.split("/" + albumNum + "/");
       if (tried.length == 1)
         continue;
       String trackNum = tried[1];
-      //http://www.ximalaya.com/tracks/238620663.json
       String trackUrl = "http://www.ximalaya.com/tracks/" + trackNum + ".json";
       String json = HttpUtil.url2Body(trackUrl);
       ObjectMapper mapper = new ObjectMapper();
       Map map = mapper.readValue(json, Map.class);
       String audioUrl = (String) map.get("play_path_64");
       String title = (String) map.get("title");
+      title = title.replaceAll("\"", "");
 
       String albumTitle = (String) map.get("album_title");
       File folder = new File("downloads/" + albumTitle);
       Files.createDirectories(folder.toPath());
-      System.out.println(title);
 
       File toDownload = new File(folder + "/" + title + ".m4a");
+
+      if (toDownload.exists()) {
+        if (toDownload.length() == 0) {
+          boolean delete = toDownload.delete();
+          System.out.println(toDownload + " size 0, deleted:" + delete);
+        }
+      }
+
       if (!toDownload.exists()) {
-        File downloaded = new File(title + ".m4a");
-        if (downloaded.exists()) {
-          try {
-            Files.move(downloaded.toPath(), toDownload.toPath());
-          } catch (Exception e) {
-            System.out.println(e.getMessage());
-          }
-        } else {
-          try {
-            FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
-          } catch (IOException e) {
-            System.out.println(e.getMessage());
-          }
+        try {
+          FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
+        } catch (IOException e) {
+          System.out.println(e.getMessage());
         }
       }
       hasNext = true;
     }
     return hasNext;
   }
-
 }
