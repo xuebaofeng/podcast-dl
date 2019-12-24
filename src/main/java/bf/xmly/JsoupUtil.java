@@ -19,7 +19,6 @@ public class JsoupUtil {
 
     Document doc;
     if (new File(fileName).exists()) {
-      System.out.println(fileName+" exists");
       String content = FileUtil.readToString(fileName);
       if (content == null)
         return null;

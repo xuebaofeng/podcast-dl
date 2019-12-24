@@ -39,7 +39,6 @@ public class App {
   private static boolean onePage(String albumUrl) throws Exception {
     String[] split = albumUrl.split("https://www.ximalaya.com/");
     String s = split[1].split("/")[1];
-    System.out.println(s);
     int albumNum = Integer.parseInt(s);
 
     Document page = JsoupUtil.urlToDoc(albumUrl);
@@ -59,13 +58,13 @@ public class App {
       String audioUrl = (String) map.get("play_path_64");
       String title = (String) map.get("title");
       title = title.replaceAll("\"", "");
+      title = title.replaceAll("\\?", "");
 
       String albumTitle = (String) map.get("album_title");
       File folder = new File("downloads/" + albumTitle);
       Files.createDirectories(folder.toPath());
 
       File toDownload = new File(folder + "/" + title + ".m4a");
-
       if (toDownload.exists()) {
         if (toDownload.length() == 0) {
           boolean delete = toDownload.delete();
