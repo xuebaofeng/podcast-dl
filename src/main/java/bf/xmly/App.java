@@ -43,7 +43,8 @@ public class App {
 
     Document page = JsoupUtil.urlToDoc(albumUrl);
 
-    Elements tracks = page.select("li._c2 > div> a");
+
+    Elements tracks = page.select(".sound-list .text a");
     boolean hasNext = false;
     for (Element track : tracks) {
       String href = track.attr("href");
@@ -59,8 +60,11 @@ public class App {
       String title = (String) map.get("title");
       title = title.replaceAll("\"", "");
       title = title.replaceAll("\\?", "");
+      title = title.replaceAll(": ", " ");
+      title = title.replaceAll("/", ".");
 
       String albumTitle = (String) map.get("album_title");
+      albumTitle = albumTitle.replaceAll("\\|", " ");
       File folder = new File("downloads/" + albumTitle);
       Files.createDirectories(folder.toPath());
 
