@@ -36,6 +36,7 @@ public class AudioCheck {
             }
         }
 
-        Files.writeString(Paths.get("error.log"), sb.toString());
+        if (sb.length() > 0)
+            Files.writeString(Paths.get("error.log"), sb.toString());
     }
 }
