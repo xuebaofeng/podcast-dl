@@ -17,74 +17,76 @@ import java.util.Map;
 
 public class App {
 
-  public static void main(String[] args) throws Exception {
-    if (args.length != 1) {
-      System.out.println("input album url");
-      return;
-    }
-    String albumUrl = args[0];
-    System.out.println(albumUrl);
-    if (albumUrl == null) {
-      System.out.println("input album url");
-      return;
-    }
-    boolean hasNext = true;
-    int pageNum = 1;
-    while (hasNext) {
-      hasNext = onePage(albumUrl + "/p" + pageNum);
-      pageNum++;
-    }
-  }
-
-  private static boolean onePage(String albumUrl) throws Exception {
-    String[] split = albumUrl.split("https://www.ximalaya.com/");
-    String s = split[1].split("/")[1];
-    int albumNum = Integer.parseInt(s);
-
-    Document page = JsoupUtil.urlToDoc(albumUrl);
-
-
-    Elements tracks = page.select(".sound-list .text a");
-    boolean hasNext = false;
-    for (Element track : tracks) {
-      String href = track.attr("href");
-      String[] tried = href.split("/" + albumNum + "/");
-      if (tried.length == 1)
-        continue;
-      String trackNum = tried[1];
-      String trackUrl = "http://www.ximalaya.com/tracks/" + trackNum + ".json";
-      String json = HttpUtil.url2Body(trackUrl);
-      ObjectMapper mapper = new ObjectMapper();
-      Map map = mapper.readValue(json, Map.class);
-      String audioUrl = (String) map.get("play_path_64");
-      String title = (String) map.get("title");
-      title = title.replaceAll("\"", "");
-      title = title.replaceAll("\\?", "");
-      title = title.replaceAll(": ", " ");
-      title = title.replaceAll("/", ".");
-
-      String albumTitle = (String) map.get("album_title");
-      albumTitle = albumTitle.replaceAll("\\|", " ");
-      File folder = new File("downloads/" + albumTitle);
-      Files.createDirectories(folder.toPath());
-
-      File toDownload = new File(folder + "/" + title + ".m4a");
-      if (toDownload.exists()) {
-        if (toDownload.length() == 0) {
-          boolean delete = toDownload.delete();
-          System.out.println(toDownload + " size 0, deleted:" + delete);
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1) {
+            System.out.println("input album url");
+            return;
         }
-      }
-
-      if (!toDownload.exists()) {
-        try {
-          FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
-        } catch (IOException e) {
-          System.out.println(e.getMessage());
+        String albumUrl = args[0];
+        System.out.println(albumUrl);
+        if (albumUrl == null) {
+            System.out.println("input album url");
+            return;
         }
-      }
-      hasNext = true;
+        boolean hasNext = true;
+        int pageNum = 1;
+        while (hasNext) {
+            hasNext = onePage(albumUrl + "p" + pageNum + "/", pageNum);
+            pageNum++;
+        }
     }
-    return hasNext;
-  }
+
+    private static boolean onePage(String albumUrl, int pageNum) throws Exception {
+        String[] split = albumUrl.split("https://www.ximalaya.com/");
+        String s = split[1].split("/")[1];
+        int albumNum = Integer.parseInt(s);
+
+        Document page = JsoupUtil.urlToDoc(albumUrl);
+
+        Elements tracks = page.select("#anchor_sound_list > div.sound-list._Qp > ul > li> div.text._Vc > a");
+        if (tracks.size() == 0 && pageNum == 1) throw new Exception("empty list:" + albumUrl);
+        boolean hasNext = false;
+        for (Element track : tracks) {
+            String href = track.attr("href");
+            String[] tried = href.split("/" + albumNum + "/");
+            if (tried.length == 1)
+                continue;
+            String trackNum = tried[1];
+            String trackUrl = "http://www.ximalaya.com/tracks/" + trackNum + ".json";
+            String json = HttpUtil.url2Body(trackUrl);
+            ObjectMapper mapper = new ObjectMapper();
+            Map map = mapper.readValue(json, Map.class);
+            String audioUrl = (String) map.get("play_path_64");
+            String title = (String) map.get("title");
+            if (title.contains("直播回听")) continue;
+            title = title.replaceAll("\"", "");
+            title = title.replaceAll("\\?", "");
+            title = title.replaceAll("\\|", "");
+            title = title.replaceAll("/", "");
+
+            String albumTitle = (String) map.get("album_title");
+            albumTitle = albumTitle.replaceAll("\\|", "");
+            File folder = new File("C:\\media\\podcast\\" + albumTitle);
+            Files.createDirectories(folder.toPath());
+
+            File toDownload = new File(folder + "/" + title + ".m4a");
+            if (toDownload.exists()) {
+                if (toDownload.length() == 0) {
+                    boolean delete = toDownload.delete();
+                    System.out.println(toDownload + " size 0, deleted:" + delete);
+                }
+            }
+
+            if (!toDownload.exists()) {
+                try {
+                    FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                }
+                System.out.println(title);
+            }
+            hasNext = true;
+        }
+        return hasNext;
+    }
 }
