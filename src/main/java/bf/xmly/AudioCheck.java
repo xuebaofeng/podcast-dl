@@ -5,11 +5,11 @@ package bf.xmly;
 
 import de.odysseus.ithaka.audioinfo.AudioInfo;
 import de.odysseus.ithaka.audioinfo.m4a.M4AInfo;
+import de.odysseus.ithaka.audioinfo.mp3.ID3v2Exception;
+import de.odysseus.ithaka.audioinfo.mp3.MP3Exception;
+import de.odysseus.ithaka.audioinfo.mp3.MP3Info;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,16 +19,72 @@ import java.util.stream.Collectors;
 public class AudioCheck {
 
     public static void main(String[] args) throws Exception {
+//        checkMp3();
+        checkM4a();
+    }
+
+    private static void checkMp3() throws IOException, ID3v2Exception, MP3Exception {
         StringBuilder sb = new StringBuilder();
-        ArrayList<Path> files = Files.walk(Paths.get("c:\\media\\podcast\\"))
+        ArrayList<Path> files = Files.walk(Paths.get("c:\\media\\podcast\\ljsw"))
                 .filter(Files::isRegularFile)
                 .collect(Collectors.toCollection(ArrayList::new));
+
+        InputStream inputStream;
         for (Path path : files) {
             File file = path.toFile();
-            InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
-            AudioInfo audioInfo = new M4AInfo(inputStream);
-            double x = file.length() / audioInfo.getDuration();
-            inputStream.close();
+            inputStream = new BufferedInputStream(new FileInputStream(file));
+            AudioInfo audioInfo = null;
+
+
+            long fileLength = file.length();
+
+            if (audioInfo == null) {
+                try {
+                    audioInfo = new MP3Info(inputStream, fileLength);
+                } catch (IOException e) {
+                    sb.append(file).append("\n");
+                    continue;
+                } finally {
+                    inputStream.close();
+                }
+            }
+
+            long duration = audioInfo.getDuration();
+            if (duration == 0) continue;
+            double x = fileLength / audioInfo.getDuration();
+            if (x < 8) {
+                System.out.println(file);
+            }
+        }
+
+        if (sb.length() > 0)
+            Files.writeString(Paths.get("error.log"), sb.toString());
+    }
+
+    private static void checkM4a() throws IOException, ID3v2Exception, MP3Exception {
+        StringBuilder sb = new StringBuilder();
+        ArrayList<Path> files = Files.walk(Paths.get("c:\\media\\podcast\\"))
+                .filter((path) -> !path.toString().contains("ljsw") && Files.isRegularFile(path))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        InputStream inputStream;
+        for (Path path : files) {
+            File file = path.toFile();
+            inputStream = new BufferedInputStream(new FileInputStream(file));
+            AudioInfo audioInfo;
+
+            try {
+                audioInfo = new M4AInfo(inputStream);
+            } catch (IOException e) {
+                sb.append(file).append("\n");
+                continue;
+            } finally {
+                inputStream.close();
+            }
+
+            long fileLength = file.length();
+
+            double x = fileLength / audioInfo.getDuration();
             if (x < 8) {
                 System.out.println(path);
                 sb.append(path).append("\n");
