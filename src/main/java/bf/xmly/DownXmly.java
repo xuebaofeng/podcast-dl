@@ -59,6 +59,7 @@ public class DownXmly {
             String audioUrl = (String) map.get("play_path_64");
             String title = (String) map.get("title");
             if (title.contains("直播回听")) continue;
+            if (title.contains("问题征集活动")) continue;
             title = title.replaceAll("\"", "");
             title = title.replaceAll("\\?", "");
             title = title.replaceAll("\\|", "");

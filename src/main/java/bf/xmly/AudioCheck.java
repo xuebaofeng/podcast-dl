@@ -85,10 +85,10 @@ public class AudioCheck {
             long fileLength = file.length();
 
             double x = fileLength / audioInfo.getDuration();
-            if (x < 8) {
-                System.out.println(path);
+            if (x < 7) {
+                System.out.println(path + ": " + x);
                 sb.append(path).append("\n");
-//                Files.delete(path);
+                Files.delete(path);
             }
         }
 
