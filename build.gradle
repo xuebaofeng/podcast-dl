@@ -39,5 +39,5 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName = 'bf.xmly.App'
+    mainClassName = 'bf.pd.App'
 }
