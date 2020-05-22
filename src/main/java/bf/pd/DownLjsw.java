@@ -17,18 +17,11 @@ public class DownLjsw {
 
     public static void main(String[] args) throws Exception {
 
-        String baseUrl = "https://www.ljsw.io/knowl/column/5/";
+//        String baseUrl = "https://www.ljsw.io/knowl/column/2/";
+//        String baseUrl = "https://www.ljsw.io/knowl/column/5/";
+        String baseUrl = "https://www.ljsw.io/knowl/column/3/";
         boolean hasNext = true;
         int pageNum = 1;
-        while (hasNext) {
-            hasNext = onePage(baseUrl + pageNum + "/");
-            pageNum++;
-        }
-
-//        baseUrl = "https://www.ljsw.io/knowl/column/3/";
-        baseUrl = "https://www.ljsw.io/knowl/column/2/";
-        hasNext = true;
-        pageNum = 1;
         while (hasNext) {
             hasNext = onePage(baseUrl + pageNum + "/");
             pageNum++;
@@ -51,12 +44,12 @@ public class DownLjsw {
             String title = trackDoc.select(".post-title").get(0).html();
             String audioUrl = audio.attr("src");
 
-            title = title.replaceAll("\"", "");
-            title = title.replaceAll("\\?", "");
+            title = title.replaceAll("\\?", "？");
             title = title.replaceAll("\\|", "");
             title = title.replaceAll("/", "");
+            title = title.replaceAll(":", "：");
 
-            String albumTitle = "ljsw";
+            String albumTitle = "罗辑思维前4季";
             File folder = new File("C:\\media\\podcast\\" + albumTitle);
             Files.createDirectories(folder.toPath());
 

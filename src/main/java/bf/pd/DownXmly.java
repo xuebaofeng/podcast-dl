@@ -23,11 +23,7 @@ public class DownXmly {
             return;
         }
         String albumUrl = args[0];
-        System.out.println(albumUrl);
-        if (albumUrl == null) {
-            System.out.println("input album url");
-            return;
-        }
+
         boolean hasNext = true;
         int pageNum = 1;
         while (hasNext) {
@@ -37,6 +33,7 @@ public class DownXmly {
     }
 
     private static boolean onePage(String albumUrl, int pageNum) throws Exception {
+        System.out.println(albumUrl);
         String[] split = albumUrl.split("https://www.ximalaya.com/");
         String s = split[1].split("/")[1];
         int albumNum = Integer.parseInt(s);
@@ -44,6 +41,7 @@ public class DownXmly {
         Document page = JsoupUtil.urlToDoc(albumUrl);
 
         Elements tracks = page.select("#anchor_sound_list > div.sound-list._Qp > ul > li> div.text._Vc > a");
+        System.out.println(page.select("head > title").html());
         if (tracks.size() == 0 && pageNum == 1) throw new Exception("empty list:" + albumUrl);
         boolean hasNext = false;
         for (Element track : tracks) {
@@ -64,6 +62,8 @@ public class DownXmly {
             title = title.replaceAll("\\?", "");
             title = title.replaceAll("\\|", "");
             title = title.replaceAll("/", "");
+
+            System.out.println(title);
 
             String albumTitle = (String) map.get("album_title");
             albumTitle = albumTitle.replaceAll("\\|", "");
