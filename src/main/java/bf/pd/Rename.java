@@ -18,7 +18,7 @@ public class Rename {
     static Logger log = LoggerFactory.getLogger(Rename.class);
 
     public static void main(String[] args) throws Exception {
-        String path = "c:\\media\\podcast\\老吴alien";
+        String path = "c:\\media\\podcast\\枪炮，病菌与钢铁";
         ArrayList<Path> list = Files.walk(Paths.get(path))
                 .filter(Files::isRegularFile)
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -28,6 +28,11 @@ public class Rename {
             if(!test.equals(simple)){
                log.debug(p.toString());
                 Files.move(p, p.resolveSibling(simple));
+            }
+            String arabic = ChineseNumberUtil.convertString(test);
+            if(!test.equals(arabic)){
+                log.debug(p.toString());
+                log.debug(arabic);
             }
         }
     }
