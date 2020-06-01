@@ -18,22 +18,22 @@ public class Rename {
     static Logger log = LoggerFactory.getLogger(Rename.class);
 
     public static void main(String[] args) throws Exception {
-        String path = "c:\\media\\podcast\\枪炮，病菌与钢铁";
+        String path = "c:\\media\\podcast\\相声";
         ArrayList<Path> list = Files.walk(Paths.get(path))
                 .filter(Files::isRegularFile)
                 .collect(Collectors.toCollection(ArrayList::new));
         for (Path p : list) {
             String test = p.toFile().getName();
             String simple = ZhConverterUtil.toSimple(test);
-            if(!test.equals(simple)){
-               log.debug(p.toString());
+            if (!test.equals(simple)) {
+                log.debug(p.toString());
                 Files.move(p, p.resolveSibling(simple));
             }
-            String arabic = ChineseNumberUtil.convertString(test);
-            if(!test.equals(arabic)){
+/*            String arabic = ChineseNumberUtil.convertString(test);
+            if (!test.equals(arabic)) {
                 log.debug(p.toString());
                 log.debug(arabic);
-            }
+            }*/
         }
     }
 }

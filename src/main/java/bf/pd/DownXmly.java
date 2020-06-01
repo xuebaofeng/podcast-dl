@@ -13,11 +13,17 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 public class DownXmly {
 
+    static List<String> blackList;
+
     public static void main(String[] args) throws Exception {
+        blackList = Files.readAllLines(Path.of("blacklist.txt"));
+
         if (args.length != 1) {
             System.out.println("input album url");
             return;
@@ -44,6 +50,8 @@ public class DownXmly {
         System.out.println(page.select("head > title").html());
         if (tracks.size() == 0 && pageNum == 1) throw new Exception("empty list:" + albumUrl);
         boolean hasNext = false;
+
+        tracks:
         for (Element track : tracks) {
             String href = track.attr("href");
             String[] tried = href.split("/" + albumNum + "/");
@@ -62,6 +70,13 @@ public class DownXmly {
             title = title.replaceAll("\\?", "");
             title = title.replaceAll("\\|", "");
             title = title.replaceAll("/", "");
+
+            for (String item : blackList) {
+                if (title.contains(item)) {
+                    System.out.println(title + " is blacklisted, skip");
+                    continue tracks;
+                }
+            }
 
             System.out.println(title);
 
@@ -84,7 +99,6 @@ public class DownXmly {
                 } catch (IOException e) {
                     System.out.println(e.getMessage());
                 }
-                System.out.println(title);
             }
             hasNext = true;
         }
