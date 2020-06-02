@@ -14,7 +14,7 @@ public class SQLiteJDBC {
     private static Set<String> allArtist;
     private static Set<String> notTrack = new HashSet<>();
     public static final String[] SPLITTER = new String[]{"_", "-", "》", "《", " ", "&", "相声", "群口",
-            "、", "作品", "－", "\\(", "\\)", "—", "（", "^\\d*", "\\{", "\\}"};
+            "、", "作品", "－", "\\(", "\\)", "—", "（", "^\\d*", "\\{", "\\}", "单口", ":", "："};
 
     public static void main(String args[]) throws Exception {
         allArtist = allArtist();
