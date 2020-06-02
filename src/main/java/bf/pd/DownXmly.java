@@ -21,6 +21,7 @@ public class DownXmly {
     static List<String> blackList;
     private static HashMap<String, Set<String>> allTracks = new HashMap<>();
     private static Set<String> allArtist;
+    private static boolean isXiangSheng;
 
     public static void main(String[] args) throws Exception {
         blackList = Files.readAllLines(Path.of("blacklist.txt"));
@@ -33,11 +34,14 @@ public class DownXmly {
         String albumUrl = args[0];
 
         if (albumUrl.contains("xiangsheng")) {
+            isXiangSheng = true;
             if (allTracks.isEmpty())
                 allTracks = SQLiteJDBC.allTracks();
 
             if (allArtist == null || allArtist.isEmpty())
                 allArtist = SQLiteJDBC.allArtist();
+        } else {
+            isXiangSheng = false;
         }
 
         boolean hasNext = true;
@@ -94,23 +98,23 @@ public class DownXmly {
                 }
             }
 
-
-            for (String aTrack : allTracks.keySet()) {
-                if (!foundArtist(title, albumName)) {
-                    System.out.println(title + " has no artist, skip");
-                    continue tracks;
-                }
-                if (title.contains(aTrack)) {
-                    Set<String> artists = allTracks.get(aTrack);
-                    for (String artist : artists) {
-                        if (title.contains(artist) || albumName.contains(artist)) {
-                            System.out.println(title + " is downloaded, skip");
-                            continue tracks;
+            if (isXiangSheng) {
+                for (String aTrack : allTracks.keySet()) {
+                    if (!foundArtist(title, albumName)) {
+                        System.out.println(title + " has no artist, skip");
+                        continue tracks;
+                    }
+                    if (title.contains(aTrack)) {
+                        Set<String> artists = allTracks.get(aTrack);
+                        for (String artist : artists) {
+                            if (title.contains(artist) || albumName.contains(artist)) {
+                                System.out.println(title + " is downloaded, skip");
+                                continue tracks;
+                            }
                         }
                     }
                 }
             }
-
 
             String albumTitle = (String) map.get("album_title");
             albumTitle = albumTitle.replaceAll("\\|", "");
@@ -126,12 +130,8 @@ public class DownXmly {
             }
 
             if (!toDownload.exists()) {
-                try {
-                    System.out.println(title);
-                    FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
-                } catch (IOException e) {
-                    System.out.println(e.getMessage());
-                }
+                System.out.println(title);
+                FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
             }
         }
         return true;

@@ -6,3 +6,4 @@ build
 gradle*
 .idea
 *.log
+cache
