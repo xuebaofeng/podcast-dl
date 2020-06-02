@@ -14,21 +14,31 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DownXmly {
 
     static List<String> blackList;
+    private static HashMap<String, Set<String>> allTracks = new HashMap<>();
+    private static Set<String> allArtist;
 
     public static void main(String[] args) throws Exception {
         blackList = Files.readAllLines(Path.of("blacklist.txt"));
+
 
         if (args.length != 1) {
             System.out.println("input album url");
             return;
         }
         String albumUrl = args[0];
+
+        if (albumUrl.contains("xiangsheng")) {
+            if (allTracks.isEmpty())
+                allTracks = SQLiteJDBC.allTracks();
+
+            if (allArtist == null || allArtist.isEmpty())
+                allArtist = SQLiteJDBC.allArtist();
+        }
 
         boolean hasNext = true;
         int pageNum = 1;
@@ -47,9 +57,14 @@ public class DownXmly {
         Document page = JsoupUtil.urlToDoc(albumUrl);
 
         Elements tracks = page.select("#anchor_sound_list > div.sound-list._Qp > ul > li> div.text._Vc > a");
-        System.out.println(page.select("head > title").html());
-        if (tracks.size() == 0 && pageNum == 1) throw new Exception("empty list:" + albumUrl);
-        boolean hasNext = false;
+        String albumName = page.select("head > title").html();
+        System.out.println(albumName);
+        if (tracks.size() == 0) {
+            if (pageNum == 1)
+                throw new Exception("empty list:" + albumUrl);
+            else
+                return false;
+        }
 
         tracks:
         for (Element track : tracks) {
@@ -71,6 +86,7 @@ public class DownXmly {
             title = title.replaceAll("\\|", "");
             title = title.replaceAll("/", "");
 
+
             for (String item : blackList) {
                 if (title.contains(item)) {
                     System.out.println(title + " is blacklisted, skip");
@@ -78,7 +94,23 @@ public class DownXmly {
                 }
             }
 
-            System.out.println(title);
+
+            for (String aTrack : allTracks.keySet()) {
+                if (!foundArtist(title, albumName)) {
+                    System.out.println(title + " has no artist, skip");
+                    continue tracks;
+                }
+                if (title.contains(aTrack)) {
+                    Set<String> artists = allTracks.get(aTrack);
+                    for (String artist : artists) {
+                        if (title.contains(artist) || albumName.contains(artist)) {
+                            System.out.println(title + " is downloaded, skip");
+                            continue tracks;
+                        }
+                    }
+                }
+            }
+
 
             String albumTitle = (String) map.get("album_title");
             albumTitle = albumTitle.replaceAll("\\|", "");
@@ -95,13 +127,20 @@ public class DownXmly {
 
             if (!toDownload.exists()) {
                 try {
+                    System.out.println(title);
                     FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
                 } catch (IOException e) {
                     System.out.println(e.getMessage());
                 }
             }
-            hasNext = true;
         }
-        return hasNext;
+        return true;
+    }
+
+    private static boolean foundArtist(String title, String albumName) {
+        for (String artist : allArtist) {
+            if (title.contains(artist) || albumName.contains(artist)) return true;
+        }
+        return false;
     }
 }
