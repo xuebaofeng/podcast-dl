@@ -20,6 +20,11 @@ public class XmlyTest {
                 "https://www.ximalaya.com/xiangsheng/2677366/",
                 "https://www.ximalaya.com/xiangsheng/10103087/",
                 "https://www.ximalaya.com/xiangsheng/11543196/",
+                "https://www.ximalaya.com/xiangsheng/4213759/",
+                "https://www.ximalaya.com/xiangsheng/18529653/",
+                "https://www.ximalaya.com/xiangsheng/8987936/",
+                "https://www.ximalaya.com/xiangsheng/4827431/",
+                "https://www.ximalaya.com/xiangsheng/18062457/",
         };
         for (String url : urls) {
             DownXmly.main(new String[]{url, "10000"});
