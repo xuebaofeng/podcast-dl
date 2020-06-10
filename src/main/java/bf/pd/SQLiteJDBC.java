@@ -14,7 +14,7 @@ public class SQLiteJDBC {
     private static Set<String> allArtist;
     private static Set<String> notTrack = new HashSet<>();
     public static final String[] SPLITTER = new String[]{"_", "-", "》", "《", " ", "&", "相声", "群口",
-            "、", "作品", "－", "\\(", "\\)", "—", "（", "^\\d*", "\\{", "\\}", "单口", ":", "："};
+            "、", "作品", "－", "\\(", "\\)", "—", "（", "^\\d*", "\\{", "\\}", "单口", ":", "：", "完整版"};
 
     public static void main(String args[]) throws Exception {
         allArtist = allArtist();
@@ -41,7 +41,8 @@ public class SQLiteJDBC {
     }
 
     private static String extractTrack(String path) {
-        path = path.substring(0, path.lastIndexOf(".m4a"));
+        if (path.endsWith(".m4a"))
+            path = path.substring(0, path.lastIndexOf(".m4a"));
 
         String track = null;
         List<String> words = splitWords(path);
@@ -97,6 +98,15 @@ public class SQLiteJDBC {
         PreparedStatement stmt = c.prepareStatement("INSERT INTO podcast (artist, track) VALUES(?, ?)");
         stmt.setString(1, artist);
         stmt.setString(2, track);
+        stmt.execute();
+        stmt.close();
+    }
+
+
+    static void insertArtist(String artist) throws Exception {
+        Connection c = getConnection();
+        PreparedStatement stmt = c.prepareStatement("INSERT INTO artist (artist) VALUES(?)");
+        stmt.setString(1, artist);
         stmt.execute();
         stmt.close();
     }

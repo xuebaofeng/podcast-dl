@@ -4,34 +4,45 @@
 package bf.pd;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.apache.commons.io.FileUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class DownXmly {
 
+    public static final int MINUTES = 15;
     static List<String> blackList;
     private static HashMap<String, Set<String>> allTracks = new HashMap<>();
     private static Set<String> allArtist;
     private static boolean isXiangSheng;
 
+    static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    private static Date now = new Date();
+    private static int days;
+
+
     public static void main(String[] args) throws Exception {
+        SQLiteJDBC.main(null);
+
         blackList = Files.readAllLines(Path.of("blacklist.txt"));
-
-
-        if (args.length != 1) {
-            System.out.println("input album url");
+        if (args.length != 2) {
+            System.out.println("url days");
             return;
         }
+
         String albumUrl = args[0];
+        String daysString = args[1];
+        days = Integer.parseInt(daysString);
 
         if (albumUrl.contains("xiangsheng")) {
             isXiangSheng = true;
@@ -82,14 +93,36 @@ public class DownXmly {
             ObjectMapper mapper = new ObjectMapper();
             Map map = mapper.readValue(json, Map.class);
             String audioUrl = (String) map.get("play_path_64");
+            if (audioUrl == null) {
+                System.out.println(trackNum + ".json has error, skip");
+                continue;
+            }
+
             String title = (String) map.get("title");
+
+            int duration = (int) map.get("duration");
+            if (duration < 60 * MINUTES) {
+                System.out.println(title + " shorter than " + MINUTES + " minutes, skip");
+                continue;
+            }
+
+            String created = (String) map.get("formatted_created_at");
+            if (created != null) {
+                Date parse = simpleDateFormat.parse(created);
+                long diff = TimeUnit.DAYS.convert(now.getTime() - parse.getTime(), TimeUnit.MILLISECONDS);
+                if (diff >= days) {
+                    System.out.println(title + " is more than " + diff + " days, skip");
+                    return false;
+                }
+            }
+
             if (title.contains("直播回听")) continue;
             if (title.contains("问题征集活动")) continue;
             title = title.replaceAll("\"", "");
             title = title.replaceAll("\\?", "");
             title = title.replaceAll("\\|", "");
             title = title.replaceAll("/", "");
-
+            title = ZhConverterUtil.toSimple(title);
 
             for (String item : blackList) {
                 if (title.contains(item)) {

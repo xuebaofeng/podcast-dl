@@ -27,10 +27,10 @@ public class AudioCheck {
                 .filter((path) -> {
                     String pathStr = path.toString();
                     return
-                          !pathStr.contains("ljsw")
-                          && !pathStr.contains("S05E01")
-                          && !pathStr.endsWith(".bat")
-                          && Files.isRegularFile(path);
+                            !pathStr.contains("ljsw")
+                                    && !pathStr.contains("S05E01")
+                                    && !pathStr.endsWith(".bat")
+                                    && Files.isRegularFile(path);
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
 

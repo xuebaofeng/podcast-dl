@@ -8,17 +8,21 @@ import org.junit.Test;
 public class XmlyTest {
     @Test
     public void run() throws Exception {
-        SQLiteJDBC.main(null);
-        String[][] urls = {
-                {"https://www.ximalaya.com/keji/20486769/"},
-                {"https://www.ximalaya.com/keji/246622/"},
-                {"https://www.ximalaya.com/keji/5411224/"},
-                {"https://www.ximalaya.com/keji/4310827/"},
-                {"https://www.ximalaya.com/keji/4769101/"},
-                {"https://www.ximalaya.com/keji/21469108/"},
+        String[] urls = {
+/*                "https://www.ximalaya.com/keji/20486769/",
+                "https://www.ximalaya.com/keji/246622/",
+                "https://www.ximalaya.com/keji/5411224/",
+                "https://www.ximalaya.com/keji/4769101/",
+                "https://www.ximalaya.com/keji/21469108/",*/
+                "https://www.ximalaya.com/xiangsheng/38507917/",
+                "https://www.ximalaya.com/xiangsheng/26799902/",
+                "https://www.ximalaya.com/xiangsheng/14690703/",
+                "https://www.ximalaya.com/xiangsheng/2677366/",
+                "https://www.ximalaya.com/xiangsheng/10103087/",
+                "https://www.ximalaya.com/xiangsheng/11543196/",
         };
-        for (String[] url : urls) {
-            DownXmly.main(url);
+        for (String url : urls) {
+            DownXmly.main(new String[]{url, "10000"});
         }
     }
 }
