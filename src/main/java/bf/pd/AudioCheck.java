@@ -54,7 +54,7 @@ public class AudioCheck {
             double x = fileLength / audioInfo.getDuration();
             if (x < 8) {
                 System.out.println(file.getAbsolutePath() + ": " + x);
-                Files.delete(path);
+                java.awt.Desktop.getDesktop().moveToTrash(path.toFile());
             }
         }
     }

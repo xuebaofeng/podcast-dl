@@ -14,7 +14,7 @@ public class XmlyTest {
                 "https://www.ximalaya.com/keji/5411224/",
                 "https://www.ximalaya.com/keji/4769101/",
                 "https://www.ximalaya.com/keji/21469108/",*/
-                "https://www.ximalaya.com/xiangsheng/38507917/",
+/*                "https://www.ximalaya.com/xiangsheng/38507917/",
                 "https://www.ximalaya.com/xiangsheng/26799902/",
                 "https://www.ximalaya.com/xiangsheng/14690703/",
                 "https://www.ximalaya.com/xiangsheng/2677366/",
@@ -24,6 +24,19 @@ public class XmlyTest {
                 "https://www.ximalaya.com/xiangsheng/18529653/",
                 "https://www.ximalaya.com/xiangsheng/8987936/",
                 "https://www.ximalaya.com/xiangsheng/4827431/",
+                "https://www.ximalaya.com/xiangsheng/18062457/",*/
+/*                "https://www.ximalaya.com/xiangsheng/4935023/",
+                "https://www.ximalaya.com/xiangsheng/28552802/",
+                "https://www.ximalaya.com/xiangsheng/37264959/",
+                "https://www.ximalaya.com/xiangsheng/14682377/",
+                "https://www.ximalaya.com/xiangsheng/38264425/",
+                "https://www.ximalaya.com/xiangsheng/37596869/",
+                "https://www.ximalaya.com/xiangsheng/36394613/",*/
+/*                "https://www.ximalaya.com/xiangsheng/16708539/",
+                "https://www.ximalaya.com/xiangsheng/20722552/",
+                "https://www.ximalaya.com/xiangsheng/3274224/",
+                "https://www.ximalaya.com/xiangsheng/38269507/",*/
+                "https://www.ximalaya.com/xiangsheng/17577310/",
                 "https://www.ximalaya.com/xiangsheng/18062457/",
         };
         for (String url : urls) {

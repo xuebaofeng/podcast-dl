@@ -34,7 +34,7 @@ public class DownXmly {
     public static void main(String[] args) throws Exception {
         SQLiteJDBC.main(null);
 
-        blackList = Files.readAllLines(Path.of("blacklist.txt"));
+        blackList = Files.readAllLines(Path.of("blacklist.properties"));
         if (args.length != 2) {
             System.out.println("url days");
             return;
