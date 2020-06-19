@@ -13,57 +13,39 @@ import org.jsoup.select.Elements;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DownXmly {
 
-    public static final int MINUTES = 15;
-    static List<String> blackList;
-    private static HashMap<String, Set<String>> allTracks = new HashMap<>();
-    private static Set<String> allArtist;
-    private static boolean isXiangSheng;
-
-    static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-    private static Date now = new Date();
-    private static int days;
-
 
     public static void main(String[] args) throws Exception {
-        SQLiteJDBC.main(null);
 
-        blackList = Files.readAllLines(Path.of("blacklist.properties"));
-        if (args.length != 2) {
-            System.out.println("url days");
+        if (args.length != 1) {
+            System.out.println("DownXmly url");
             return;
         }
 
         String albumUrl = args[0];
-        String daysString = args[1];
-        days = Integer.parseInt(daysString);
-
-        if (albumUrl.contains("xiangsheng")) {
-            isXiangSheng = true;
-            if (allTracks.isEmpty())
-                allTracks = SQLiteJDBC.allTracks();
-
-            if (allArtist == null || allArtist.isEmpty())
-                allArtist = SQLiteJDBC.allArtist();
-        } else {
-            isXiangSheng = false;
+        Document document = JsoupUtil.urlToDoc(albumUrl);
+        String tracksNodeValue = document.select("#anchor_sound_list > div.head._Qp span").text();
+        String tracksCountString = tracksNodeValue.split("声音（")[1].split("）")[0];
+        int tracksCount = Integer.parseInt(tracksCountString.trim());
+        int pageCount = tracksCount / 30;
+        ExecutorService executorService = Executors.newFixedThreadPool(pageCount);
+        for (int i = 1; i <= pageCount + 1; i++) {
+            int finalI = i;
+            executorService.submit(() -> {
+                onePage(albumUrl + "p" + finalI + "/", finalI);
+            });
         }
-
-        boolean hasNext = true;
-        int pageNum = 1;
-        while (hasNext) {
-            hasNext = onePage(albumUrl + "p" + pageNum + "/", pageNum);
-            pageNum++;
+        executorService.shutdown();
+        while (!executorService.isTerminated()) {
         }
     }
 
-    private static boolean onePage(String albumUrl, int pageNum) throws Exception {
+    private static void onePage(String albumUrl, int pageNum) {
         System.out.println(albumUrl);
         String[] split = albumUrl.split("https://www.ximalaya.com/");
         String s = split[1].split("/")[1];
@@ -76,104 +58,71 @@ public class DownXmly {
         System.out.println(albumName);
         if (tracks.size() == 0) {
             if (pageNum == 1)
-                throw new Exception("empty list:" + albumUrl);
+                throw new RuntimeException("empty list:" + albumUrl);
             else
-                return false;
+                return;
         }
 
-        tracks:
+        ExecutorService executorService = Executors.newFixedThreadPool(tracks.size());
         for (Element track : tracks) {
-            String href = track.attr("href");
-            String[] tried = href.split("/" + albumNum + "/");
-            if (tried.length == 1)
-                continue;
-            String trackNum = tried[1];
-            String trackUrl = "http://www.ximalaya.com/tracks/" + trackNum + ".json";
-            String json = HttpUtil.url2Body(trackUrl);
-            ObjectMapper mapper = new ObjectMapper();
-            Map map = mapper.readValue(json, Map.class);
-            String audioUrl = (String) map.get("play_path_64");
-            if (audioUrl == null) {
-                System.out.println(trackNum + ".json has error, skip");
-                continue;
-            }
-
-            String title = (String) map.get("title");
-
-            int duration = (int) map.get("duration");
-            if (duration < 60 * MINUTES) {
-                System.out.println(title + " shorter than " + MINUTES + " minutes, skip");
-                continue;
-            }
-
-            String created = (String) map.get("formatted_created_at");
-            if (created != null) {
-                Date parse = simpleDateFormat.parse(created);
-                long diff = TimeUnit.DAYS.convert(now.getTime() - parse.getTime(), TimeUnit.MILLISECONDS);
-                if (diff >= days) {
-                    System.out.println(title + " is more than " + diff + " days, skip");
-                    return false;
+            executorService.submit(() -> {
+                try {
+                    downloadTrack(track);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            }
+            });
+        }
+        executorService.shutdown();
+        while (!executorService.isTerminated()) {
+        }
+    }
 
-            if (title.contains("直播回听")) continue;
-            if (title.contains("问题征集活动")) continue;
-            title = title.replaceAll("\"", "");
-            title = title.replaceAll("\\?", "");
-            title = title.replaceAll("\\|", "");
-            title = title.replaceAll("/", "");
-            title = ZhConverterUtil.toSimple(title);
+    private static void downloadTrack(Element track) throws Exception {
+        String href = track.attr("href");
+        String trackNum = href.substring(href.lastIndexOf("/") + 1);
+        String trackUrl = "http://www.ximalaya.com/tracks/" + trackNum + ".json";
+        String json = HttpUtil.url2Body(trackUrl);
+        ObjectMapper mapper = new ObjectMapper();
+        Map map = mapper.readValue(json, Map.class);
+        String audioUrl = (String) map.get("play_path_64");
+        if (audioUrl == null) {
+            System.out.println(trackNum + ".json has error, skip");
+            return;
+        }
 
-            for (String item : blackList) {
-                if (title.contains(item)) {
-                    System.out.println(title + " is blacklisted, skip");
-                    continue tracks;
-                }
-            }
+        String title = (String) map.get("title");
+        title = title.replaceAll("\"", "");
+        title = title.replaceAll("\\?", "");
+        title = title.replaceAll("\\|", "");
+        title = title.replaceAll("/", "");
+        title = ZhConverterUtil.toSimple(title);
 
-            if (isXiangSheng) {
-                for (String aTrack : allTracks.keySet()) {
-                    if (!foundArtist(title, albumName)) {
-                        System.out.println(title + " has no artist, skip");
-                        continue tracks;
-                    }
-                    if (title.contains(aTrack)) {
-                        Set<String> artists = allTracks.get(aTrack);
-                        for (String artist : artists) {
-                            if (title.contains(artist) || albumName.contains(artist)) {
-                                System.out.println(title + " is downloaded, skip");
-                                continue tracks;
-                            }
-                        }
-                    }
-                }
-            }
+        String albumTitle = (String) map.get("album_title");
+        albumTitle = albumTitle.replaceAll("\\|", "");
+        File folder = new File("C:\\media\\podcast\\" + albumTitle);
+        Files.createDirectories(folder.toPath());
 
-            String albumTitle = (String) map.get("album_title");
-            albumTitle = albumTitle.replaceAll("\\|", "");
-            File folder = new File("C:\\media\\podcast\\" + albumTitle);
-            Files.createDirectories(folder.toPath());
+        File toDownload = new File(folder + "/" + title + ".m4a");
+        deleteFile(toDownload);
 
-            File toDownload = new File(folder + "/" + title + ".m4a");
-            if (toDownload.exists()) {
-                if (toDownload.length() == 0) {
-                    boolean delete = toDownload.delete();
-                    System.out.println(toDownload + " size 0, deleted:" + delete);
-                }
-            }
-
-            if (!toDownload.exists()) {
-                System.out.println(title);
+        if (!toDownload.exists()) {
+            System.out.println(title);
+            try {
                 FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
+            } finally {
+                deleteFile(toDownload);
             }
         }
-        return true;
     }
 
-    private static boolean foundArtist(String title, String albumName) {
-        for (String artist : allArtist) {
-            if (title.contains(artist) || albumName.contains(artist)) return true;
+    private static void deleteFile(File toDownload) {
+        if (toDownload.exists()) {
+            if (toDownload.length() == 0) {
+                boolean delete = toDownload.delete();
+                System.out.println(toDownload + " size 0, deleted:" + delete);
+            }
         }
-        return false;
     }
+
 }

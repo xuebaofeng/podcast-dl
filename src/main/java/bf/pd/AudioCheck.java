@@ -22,7 +22,7 @@ public class AudioCheck {
     }
 
 
-    private static void checkM4a() throws IOException, ID3v2Exception, MP3Exception {
+    private static void checkM4a() throws IOException {
         ArrayList<Path> files = Files.walk(Paths.get("c:\\media\\podcast\\"))
                 .filter((path) -> {
                     String pathStr = path.toString();
