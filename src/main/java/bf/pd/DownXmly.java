@@ -3,6 +3,7 @@
  */
 package bf.pd;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.apache.commons.io.FileUtils;
@@ -11,6 +12,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Map;
@@ -20,7 +22,7 @@ import java.util.concurrent.Executors;
 public class DownXmly {
 
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         if (args.length != 1) {
             System.out.println("DownXmly url");
@@ -28,21 +30,21 @@ public class DownXmly {
         }
 
         String albumUrl = args[0];
+        if (!albumUrl.endsWith("/")) albumUrl += "/";
+
+        int pageCount = getPageCount(albumUrl);
+        for (int i = 1; i <= pageCount + 1; i++) {
+            onePage(albumUrl + "p" + i + "/", i);
+        }
+    }
+
+    static int getPageCount(String albumUrl) {
         Document document = JsoupUtil.urlToDoc(albumUrl);
         String tracksNodeValue = document.select("#anchor_sound_list > div.head._Qp span").text();
         String tracksCountString = tracksNodeValue.split("声音（")[1].split("）")[0];
         int tracksCount = Integer.parseInt(tracksCountString.trim());
-        int pageCount = tracksCount / 30;
-        ExecutorService executorService = Executors.newFixedThreadPool(pageCount);
-        for (int i = 1; i <= pageCount + 1; i++) {
-            int finalI = i;
-            executorService.submit(() -> {
-                onePage(albumUrl + "p" + finalI + "/", finalI);
-            });
-        }
-        executorService.shutdown();
-        while (!executorService.isTerminated()) {
-        }
+        System.out.println("total tracks:" + tracksCount);
+        return tracksCount / 30;
     }
 
     private static void onePage(String albumUrl, int pageNum) {
@@ -63,7 +65,7 @@ public class DownXmly {
                 return;
         }
 
-        ExecutorService executorService = Executors.newFixedThreadPool(tracks.size());
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
         for (Element track : tracks) {
             executorService.submit(() -> {
                 try {
@@ -78,13 +80,18 @@ public class DownXmly {
         }
     }
 
-    private static void downloadTrack(Element track) throws Exception {
+    private static void downloadTrack(Element track) {
         String href = track.attr("href");
         String trackNum = href.substring(href.lastIndexOf("/") + 1);
         String trackUrl = "http://www.ximalaya.com/tracks/" + trackNum + ".json";
         String json = HttpUtil.url2Body(trackUrl);
         ObjectMapper mapper = new ObjectMapper();
-        Map map = mapper.readValue(json, Map.class);
+        Map map = null;
+        try {
+            map = mapper.readValue(json, Map.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         String audioUrl = (String) map.get("play_path_64");
         if (audioUrl == null) {
             System.out.println(trackNum + ".json has error, skip");
@@ -92,37 +99,44 @@ public class DownXmly {
         }
 
         String title = (String) map.get("title");
-        title = title.replaceAll("\"", "");
-        title = title.replaceAll("\\?", "");
-        title = title.replaceAll("\\|", "");
-        title = title.replaceAll("/", "");
+        title = cleanFileName(title);
         title = ZhConverterUtil.toSimple(title);
 
         String albumTitle = (String) map.get("album_title");
-        albumTitle = albumTitle.replaceAll("\\|", "");
+        albumTitle = cleanFileName(albumTitle);
         File folder = new File("C:\\media\\podcast\\" + albumTitle);
-        Files.createDirectories(folder.toPath());
+        try {
+            Files.createDirectories(folder.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         File toDownload = new File(folder + "/" + title + ".m4a");
-        deleteFile(toDownload);
 
         if (!toDownload.exists()) {
             System.out.println(title);
             try {
                 FileUtils.copyURLToFile(new URL(audioUrl), toDownload);
-            } finally {
+            } catch (IOException e) {
                 deleteFile(toDownload);
+                throw new RuntimeException(e);
             }
         }
+    }
+
+    private static String cleanFileName(String title) {
+        title = title.replaceAll("\"", "_");
+        title = title.replaceAll("\\?", "？");
+        title = title.replaceAll("\\|", "");
+        title = title.replaceAll("/", "_");
+        title = title.replaceAll(":", "：");
+        return title;
     }
 
     private static void deleteFile(File toDownload) {
         if (toDownload.exists()) {
-            if (toDownload.length() == 0) {
-                boolean delete = toDownload.delete();
-                System.out.println(toDownload + " size 0, deleted:" + delete);
-            }
+            boolean delete = toDownload.delete();
+            System.out.println(toDownload + " deleted:" + delete);
         }
     }
-
 }

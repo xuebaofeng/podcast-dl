@@ -3,7 +3,6 @@
  */
 package bf.pd;
 
-import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,29 +10,72 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Rename {
 
     static Logger log = LoggerFactory.getLogger(Rename.class);
+    private static Set<String> allArtist;
 
     public static void main(String[] args) throws Exception {
-        String path = "c:\\media\\podcast\\相声";
+        String path = "c:\\media\\podcast\\名家相声精选";
         ArrayList<Path> list = Files.walk(Paths.get(path))
                 .filter(Files::isRegularFile)
                 .collect(Collectors.toCollection(ArrayList::new));
         for (Path p : list) {
             String test = p.toFile().getName();
-            String simple = ZhConverterUtil.toSimple(test);
-            if (!test.equals(simple)) {
+            String formatted = formatName(test);
+            if (!test.equals(formatted)) {
                 log.debug(p.toString());
-                Files.move(p, p.resolveSibling(simple));
+                if (!Files.exists(p.resolveSibling(formatted)))
+                    Files.move(p, p.resolveSibling(formatted));
             }
-/*            String arabic = ChineseNumberUtil.convertString(test);
-            if (!test.equals(arabic)) {
-                log.debug(p.toString());
-                log.debug(arabic);
-            }*/
         }
+    }
+
+    private static String formatName(String name) {
+        if (allArtist == null)
+            allArtist = XiangShengLib.allArtist();
+
+        name = name.substring(0, name.lastIndexOf(".m4a"));
+
+        boolean foundArtist = false;
+        StringBuilder sb = new StringBuilder();
+        for (String artist : allArtist) {
+            if (name.contains(artist)) {
+                foundArtist = true;
+                sb.append(artist).append(", ");
+                name = name.replace(artist, "");
+            }
+        }
+
+        if (sb.toString().endsWith(", ")) {
+            sb.deleteCharAt(sb.length() - 1);
+            sb.deleteCharAt(sb.length() - 1);
+        }
+
+        if (!foundArtist) {
+            throw new RuntimeException(name + ", no artist");
+        }
+
+        name = name.replaceAll("-", "");
+        name = name.replaceAll("《", "");
+        name = name.replaceAll("》", "");
+        name = name.replaceAll("【", "");
+        name = name.replaceAll("】", "");
+        name = name.replaceAll(" ", "");
+        name = name.replaceAll("_", "");
+        name = name.replaceAll("单口", "");
+        name = name.replaceAll("—", "");
+        name = name.replaceAll("、", "");
+        name = name.replaceAll("&", "");
+        name = name.replaceAll(",", "");
+        name = name.replaceAll("，", "");
+        name = name.replaceAll("相声", "");
+        name = name.replaceAll("（", "");
+        name = name.replaceAll("）", "");
+        String ret = name + " - " + sb + ".m4a";
+        return ret;
     }
 }

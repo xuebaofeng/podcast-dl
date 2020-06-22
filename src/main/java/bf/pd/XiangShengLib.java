@@ -3,14 +3,16 @@ package bf.pd;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SQLiteJDBC {
+public class XiangShengLib {
 
 
-    private static Connection connection;
     private static Set<String> allArtist;
     private static Set<String> notTrack = new HashSet<>();
     public static final String[] SPLITTER = new String[]{"_", "-", "》", "《", " ", "&", "相声", "群口",
@@ -109,6 +111,7 @@ public class SQLiteJDBC {
         stmt.setString(1, artist);
         stmt.execute();
         stmt.close();
+        c.close();
     }
 
     private static void validateTrack(String track) {
@@ -124,27 +127,25 @@ public class SQLiteJDBC {
 
     private static Connection getConnection() throws Exception {
         Class.forName("org.sqlite.JDBC");
-        if (connection == null) {
-            connection = DriverManager.getConnection("jdbc:sqlite:podcast.db");
-        }
-        return connection;
+        return DriverManager.getConnection("jdbc:sqlite:podcast.db");
     }
 
-
-    static Set<String> allArtist() throws Exception {
+    static Set<String> allArtist() {
         Set<String> artists = new HashSet<>();
-        Connection c = getConnection();
-        PreparedStatement stmt = c.prepareStatement("SELECT artist FROM artist");
-        ResultSet resultSet = stmt.executeQuery();
-        while (resultSet.next()) {
-            String artist = resultSet.getString(1);
-            artists.add(artist);
+        try (Connection c = getConnection();
+             PreparedStatement stmt = c.prepareStatement("SELECT artist FROM artist")) {
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                String artist = resultSet.getString(1);
+                artists.add(artist);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        stmt.close();
         return artists;
     }
 
-    static HashMap<String, Set<String>> allTracks() throws Exception {
+    static HashMap<String, Set<String>> downLoadedTracks() throws Exception {
         HashMap<String, Set<String>> ret = new HashMap<>();
         Connection c = getConnection();
         PreparedStatement stmt = c.prepareStatement("SELECT artist, track FROM podcast");
@@ -181,5 +182,19 @@ public class SQLiteJDBC {
             }
         }
         return false;
+    }
+
+    public static Set<String> allTracks() {
+        Set<String> set = new HashSet<>();
+        try (Connection c = getConnection();
+             PreparedStatement stmt = c.prepareStatement("SELECT track FROM track")) {
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                set.add(resultSet.getString(1));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return set;
     }
 }

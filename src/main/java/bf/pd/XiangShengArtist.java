@@ -1,6 +1,5 @@
 package bf.pd;
 
-import com.github.houbb.opencc4j.util.ZhConverterUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -8,7 +7,8 @@ import org.jsoup.select.Elements;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Artist {
+@Deprecated
+public class XiangShengArtist {
     public static void main(String[] args) throws Exception {
         Document document = JsoupUtil.urlToDoc("https://zh.wikipedia.org/zh-hans/%E4%B8%AD%E5%9B%BD%E5%A7%93%E6%B0%8F%E6%8E%92%E5%90%8D");
         Elements links = document.select("table:nth-child(68) a,table:nth-child(69) a, table:nth-child(59) a");
@@ -30,6 +30,7 @@ public class Artist {
             for (String lastName : lastNames) {
                 if (name.startsWith(lastName)) {
                     if (name.equals("相声")) continue;
+                    if (name.equals("白玉")) continue;
                     artists.add(name);
                     break;
                 }
@@ -37,11 +38,11 @@ public class Artist {
 
         }
 
-        Set<String> existingArtists = SQLiteJDBC.allArtist();
+        Set<String> existingArtists = XiangShengLib.allArtist();
         artists.removeAll(existingArtists);
 
         for (String artist : artists) {
-            SQLiteJDBC.insertArtist(artist);
+            XiangShengLib.insertArtist(artist);
         }
     }
 }

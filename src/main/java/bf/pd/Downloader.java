@@ -4,28 +4,14 @@
 package bf.pd;
 
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 public class Downloader {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         String[] urls = {
-                "https://www.ximalaya.com/waiyu/9268928/",
+                "https://www.ximalaya.com/waiyu/15268893/",
         };
 
-        ExecutorService executorService = Executors.newFixedThreadPool(urls.length);
         for (String url : urls) {
-            executorService.submit(() -> {
-                try {
-                    DownXmly.main(new String[]{url});
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-        }
-
-        executorService.shutdown();
-        while (!executorService.isTerminated()) {
+            DownXmly.main(new String[]{url});
         }
     }
 }
