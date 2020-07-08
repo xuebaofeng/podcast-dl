@@ -3,27 +3,25 @@
  */
 package bf.pd;
 
+import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 public class CleanFiles {
 
 
     public static void main(String[] args) throws Exception {
 
-        List<String> blackLists = Files.readAllLines(Path.of("blacklist.properties"));
 
-        Files.walk(Paths.get("c:\\media\\podcast\\"))
-                .filter((path) -> path.toFile().getName().endsWith(".m4a"))
+        Files.walk(Paths.get("C:\\media\\CloudMusic\\"))
+                .filter((path) ->  path.toFile().getName().endsWith(".mp3"))
                 .forEach(path -> {
                     String name = path.toFile().getName();
-                    name = name.substring(0, name.lastIndexOf(".m4a"));
-                    for (String s : blackLists) {
-                        if (name.contains(s)) {
-                            java.awt.Desktop.getDesktop().moveToTrash(path.toFile());
-                            System.out.println(path + " deleted");
+                    if (!name.contains("-")) {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            System.out.println("error delete:" + path);
                         }
                     }
                 });

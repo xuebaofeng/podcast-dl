@@ -1,0 +1,5 @@
+set JAVA_HOME=C:\green\ojdkbuild\java-11-openjdk-11.0.4-1\
+gradle build
+set CLASSPATH=C:\SAPDevelop\github\podcast-dl\build\libs\podcast-dl.jar;libs\ithaka-audioinfo-1.0.jar;C:\Users\I854966\.gradle\caches\modules-2\files-2.1\com.github.houbb\opencc4j\1.5.2\86992bb23aff4f3fd5cf9b296e2a0b5d4b95f1af\opencc4j-1.5.2.jar;C:\Users\I854966\.gradle\caches\modules-2\files-2.1\com.github.houbb\nlp-common\0.0.2\a27e65ef88a27b3b7dcab0235fb29ccb393cbe68\nlp-common-0.0.2.jar;C:\Users\I854966\.gradle\caches\modules-2\files-2.1\com.github.houbb\heaven\0.1.101\9969474ff975f459cb3962660fd38df4ccffc1f8\heaven-0.1.101.jar;C:\Users\I854966\.gradle\caches\modules-2\files-2.1\org.slf4j\slf4j-api\1.7.25\da76ca59f6a57ee3102f8f9bd9cee742973efa8a\slf4j-api-1.7.25.jar;C:\Users\I854966\.gradle\caches\modules-2\files-2.1\ch.qos.logback\logback-core\1.2.3\864344400c3d4d92dfeb0a305dc87d953677c03c\logback-core-1.2.3.jar;C:\Users\I854966\.gradle\caches\modules-2\files-2.1\ch.qos.logback\logback-classic\1.2.3\7c4f3c474fb2c041d8028740440937705ebb473a\logback-classic-1.2.3.jar
+set PATH=%JAVA_HOME%\bin;%PATH%
+java -Dfile.encoding=UTF-8 bf.pd.FormatNames
