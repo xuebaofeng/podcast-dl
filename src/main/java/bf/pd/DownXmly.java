@@ -40,7 +40,7 @@ public class DownXmly {
 
     static int getPageCount(String albumUrl) {
         Document document = JsoupUtil.urlToDoc(albumUrl);
-        String tracksNodeValue = document.select("#anchor_sound_list > div.head._Qp span").text();
+        String tracksNodeValue = document.select("#anchor_sound_list > div.head._is span").text();
         String tracksCountString = tracksNodeValue.split("声音（")[1].split("）")[0];
         int tracksCount = Integer.parseInt(tracksCountString.trim());
         System.out.println("total tracks:" + tracksCount);
@@ -55,7 +55,7 @@ public class DownXmly {
 
         Document page = JsoupUtil.urlToDoc(albumUrl);
 
-        Elements tracks = page.select("#anchor_sound_list > div.sound-list._Qp > ul > li> div.text._Vc > a");
+        Elements tracks = page.select("#anchor_sound_list > div.sound-list._is > ul > li > div.text.lF_ > a");
         String albumName = page.select("head > title").html();
         System.out.println(albumName);
         if (tracks.size() == 0) {

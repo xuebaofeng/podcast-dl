@@ -12,6 +12,7 @@ plugins {
 
     // Apply the application plugin to add support for building a CLI application.
     id 'application'
+    id 'idea'
 }
 
 compileJava { options.encoding = "UTF-8" }
@@ -27,15 +28,15 @@ repositories {
 dependencies {
 
     testImplementation 'junit:junit:4.12'
-    compile group: 'org.jsoup', name: 'jsoup', version: '1.12.1'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.1'
-    compile group: 'commons-io', name: 'commons-io', version: '2.6'
-    compile fileTree(dir: 'libs', include: '*.jar')
-    compile 'ch.qos.logback:logback-classic:1.2.3'
-    compile 'ch.qos.logback:logback-core:1.2.3'
-    compile 'org.slf4j:slf4j-api:1.7.25'
-    compile group: 'com.github.houbb', name: 'opencc4j', version: '1.5.2'
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.31.1'
+    implementation group: 'org.jsoup', name: 'jsoup', version: '1.12.1'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.1'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.6'
+    implementation fileTree(dir: 'libs', include: '*.jar')
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'ch.qos.logback:logback-core:1.2.3'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation group: 'com.github.houbb', name: 'opencc4j', version: '1.5.2'
+    implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.31.1'
 }
 
 application {
